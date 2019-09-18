@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class LiveCollection<T, C extends Collection<T>> extends LiveData<C> implements Collection<T> {
+public abstract class LiveCollection<T, C extends Collection<T>> extends LiveData<C> implements Collection<T> {
 
     private boolean isNotifyingEnabled = true;
 
