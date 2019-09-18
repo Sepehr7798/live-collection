@@ -1,120 +1,143 @@
 package sb.livecollection;
 
+import android.os.Build;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.lifecycle.LifecycleOwner;
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
-public class LiveCollection<T> extends LiveData<Collection<T>> implements Collection<T> {
+public class LiveCollection<T, C extends Collection<T>> extends LiveData<C> implements Collection<T> {
 
-    private final Collection<T> collection;
+    private boolean isNotifyingEnabled = true;
 
-    public LiveCollection() {
-        collection = Collections.emptyList();
+    LiveCollection(@NonNull C defaultItems) {
+        notifyDataChanged(defaultItems);
     }
 
-    public LiveCollection(Collection<T> defaultItems) {
-        collection = defaultItems;
-    }
-
-    @Nullable
+    @NonNull
     @Override
-    public Collection<T> getValue() {
-        return collection;
+    public C getValue() {
+        if (super.getValue() == null)
+            throw new NullPointerException("LiveCollection.getValue() must not be null!");
+
+        return super.getValue();
     }
 
     @Override
     public int size() {
-        return collection.size();
+        return getValue().size();
     }
 
     @Override
     public boolean isEmpty() {
-        return collection.isEmpty();
+        return getValue().isEmpty();
     }
 
     @Override
     public boolean contains(@Nullable Object o) {
-        return collection.contains(o);
+        return getValue().contains(o);
     }
 
     @NonNull
     @Override
     public Iterator<T> iterator() {
-        return collection.iterator();
+        return getValue().iterator();
     }
 
     @NonNull
     @Override
     public Object[] toArray() {
-        return collection.toArray();
+        return getValue().toArray();
     }
 
     @NonNull
     @Override
     public <T1> T1[] toArray(@NonNull T1[] a) {
-        return collection.toArray(a);
+        return getValue().toArray(a);
     }
 
     @Override
     public boolean add(T t) {
-        boolean result = collection.add(t);
-        notifyData();
+        boolean result = getValue().add(t);
+        notifyDataChanged();
 
         return result;
     }
 
     @Override
     public boolean remove(@Nullable Object o) {
-        boolean result = collection.remove(o);
-        notifyData();
+        boolean result = getValue().remove(o);
+        notifyDataChanged();
 
         return result;
     }
 
     @Override
     public boolean containsAll(@NonNull Collection<?> c) {
-        return collection.containsAll(c);
+        return getValue().containsAll(c);
     }
 
     @Override
     public boolean addAll(@NonNull Collection<? extends T> c) {
-        boolean result = collection.addAll(c);
-        notifyData();
+        boolean result = getValue().addAll(c);
+        notifyDataChanged();
 
         return result;
     }
 
     @Override
     public boolean removeAll(@NonNull Collection<?> c) {
-        boolean result = collection.removeAll(c);
-        notifyData();
+        boolean result = getValue().removeAll(c);
+        notifyDataChanged();
+
+        return result;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    public boolean removeIf(@NonNull Predicate<? super T> filter) {
+        boolean result = getValue().removeIf(filter);
+        notifyDataChanged();
 
         return result;
     }
 
     @Override
     public boolean retainAll(@NonNull Collection<?> c) {
-        boolean result = collection.retainAll(c);
-        notifyData();
+        boolean result = getValue().retainAll(c);
+        notifyDataChanged();
 
         return result;
     }
 
     @Override
     public void clear() {
-        collection.clear();
-        notifyData();
+        getValue().clear();
+        notifyDataChanged();
     }
 
-    protected void notifyData() {
+    public void disableNotifyingDataChanged() {
+        isNotifyingEnabled = false;
+    }
+
+    public void enableNotifyingDataChanged(boolean notify) {
+        isNotifyingEnabled = true;
+        if (notify) notifyDataChanged();
+    }
+
+    void notifyDataChanged() {
+        notifyDataChanged(getValue());
+    }
+
+    private void notifyDataChanged(C collection) {
+        if (!isNotifyingEnabled) return;
+
         if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
             setValue(collection);
         } else {
