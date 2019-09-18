@@ -1,0 +1,2 @@
+include ':app', ':live-collection'
+rootProject.name='LiveCollection'
