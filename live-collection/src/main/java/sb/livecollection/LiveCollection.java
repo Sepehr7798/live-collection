@@ -22,6 +22,8 @@ public abstract class LiveCollection<E, C extends Collection<E>>
 
     protected final C collection;
 
+    private boolean isNotifiyingEnabled = true;
+
     protected LiveCollection(C collection) {
         this.collection = collection;
     }
@@ -160,7 +162,18 @@ public abstract class LiveCollection<E, C extends Collection<E>>
         return result;
     }
 
+    public void disableNotifyingDataChanged() {
+        isNotifiyingEnabled = false;
+    }
+
+    public void enableNotyfingDataChanged(boolean notify) {
+        isNotifiyingEnabled = true;
+        if (notify) notifyDataChanged();
+    }
+
     protected void notifyDataChanged() {
+        if (!isNotifiyingEnabled) return;
+
         if (Thread.currentThread().equals(Looper.getMainLooper().getThread())) {
             setValue(getValue());
         } else {
