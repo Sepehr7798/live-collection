@@ -14,62 +14,49 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.function.UnaryOperator;
 
-public class LiveList<T> extends LiveCollection<T, List<T>> implements List<T> {
+@SuppressWarnings("unused")
+public class LiveList<E> extends LiveCollection<E, List<E>> implements List<E> {
 
     @Override
-    protected List<T> newEmptyCollection() {
+    protected List<E> newEmptyCollection() {
         return new ArrayList<>();
     }
 
     @SafeVarargs
-    public LiveList(T... defaultItems) {
-        super(new ArrayList<>(Arrays.asList(defaultItems)));
+    public LiveList(E... items) {
+        super(new ArrayList<>(Arrays.asList(items)));
     }
 
     @Override
-    public boolean addAll(int index, @NonNull Collection<? extends T> c) {
-        boolean result = getValue().addAll(index, c);
-        notifyDataChanged();
-
-        return result;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    @Override
-    public void replaceAll(@NonNull UnaryOperator<T> operator) {
-        getValue().replaceAll(operator);
-        notifyDataChanged();
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    @Override
-    public void sort(@Nullable Comparator<? super T> c) {
-        getValue().sort(c);
-        notifyDataChanged();
-    }
-
-    @Override
-    public T get(int index) {
-        return getValue().get(index);
-    }
-
-    @Override
-    public T set(int index, T element) {
-        T result = getValue().set(index, element);
+    public boolean addAll(int index, @NonNull Collection<? extends E> c) {
+        boolean result = collection.addAll(index, c);
         notifyDataChanged();
 
         return result;
     }
 
     @Override
-    public void add(int index, T element) {
-        getValue().add(index,element);
+    public E get(int index) {
+        return collection.get(index);
+    }
+
+    @Override
+    public E set(int index, E element) {
+        E result = collection.set(index, element);
+        notifyDataChanged();
+
+        return result;
+    }
+
+    @Override
+    public void add(int index, E element) {
+        collection.add(index, element);
         notifyDataChanged();
     }
 
     @Override
-    public T remove(int index) {
-        T result = getValue().remove(index);
+    public E remove(int index) {
+        E result = collection.remove(index);
         notifyDataChanged();
 
         return result;
@@ -77,33 +64,33 @@ public class LiveList<T> extends LiveCollection<T, List<T>> implements List<T> {
 
     @Override
     public int indexOf(@Nullable Object o) {
-        return getValue().indexOf(o);
+        return collection.indexOf(o);
     }
 
     @Override
     public int lastIndexOf(@Nullable Object o) {
-        return getValue().lastIndexOf(o);
+        return collection.lastIndexOf(o);
     }
 
     @NonNull
     @Override
-    public ListIterator<T> listIterator() {
+    public ListIterator<E> listIterator() {
         return listIterator(0);
     }
 
     @NonNull
     @Override
-    public ListIterator<T> listIterator(int index) {
-        final ListIterator<T> listIterator = getValue().listIterator(index);
+    public ListIterator<E> listIterator(int index) {
+        final ListIterator<E> listIterator = collection.listIterator(index);
 
-        return new ListIterator<T>() {
+        return new ListIterator<E>() {
             @Override
             public boolean hasNext() {
                 return listIterator.hasNext();
             }
 
             @Override
-            public T next() {
+            public E next() {
                 return listIterator.next();
             }
 
@@ -113,7 +100,7 @@ public class LiveList<T> extends LiveCollection<T, List<T>> implements List<T> {
             }
 
             @Override
-            public T previous() {
+            public E previous() {
                 return listIterator.previous();
             }
 
@@ -134,14 +121,14 @@ public class LiveList<T> extends LiveCollection<T, List<T>> implements List<T> {
             }
 
             @Override
-            public void set(T t) {
-                listIterator.set(t);
+            public void set(E e) {
+                listIterator.set(e);
                 notifyDataChanged();
             }
 
             @Override
-            public void add(T t) {
-                listIterator.add(t);
+            public void add(E e) {
+                listIterator.add(e);
                 notifyDataChanged();
             }
         };
@@ -149,7 +136,21 @@ public class LiveList<T> extends LiveCollection<T, List<T>> implements List<T> {
 
     @NonNull
     @Override
-    public List<T> subList(int fromIndex, int toIndex) {
-        return getValue().subList(fromIndex, toIndex);
+    public List<E> subList(int fromIndex, int toIndex) {
+        return collection.subList(fromIndex, toIndex);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    public void replaceAll(@NonNull UnaryOperator<E> operator) {
+        collection.replaceAll(operator);
+        notifyDataChanged();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    public void sort(@Nullable Comparator<? super E> c) {
+        collection.sort(c);
+        notifyDataChanged();
     }
 }

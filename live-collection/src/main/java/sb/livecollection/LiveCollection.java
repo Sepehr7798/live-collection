@@ -10,63 +10,104 @@ import androidx.lifecycle.LiveData;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Spliterator;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-public abstract class LiveCollection<T, C extends Collection<T>> extends LiveData<C> implements Collection<T> {
+@SuppressWarnings("WeakerAccess")
+public abstract class LiveCollection<E, C extends Collection<E>>
+        extends LiveData<C> implements Collection<E> {
 
     protected abstract C newEmptyCollection();
 
-    private boolean isNotifyingEnabled = true;
+    protected final C collection;
 
-    LiveCollection(@NonNull C defaultItems) {
-        notifyDataChanged(defaultItems);
+    protected LiveCollection(C collection) {
+        this.collection = collection;
     }
 
-    @NonNull
+    @Nullable
     @Override
     public C getValue() {
-        if (super.getValue() == null)
-            throw new NullPointerException("LiveCollection.getValue() must not be null!");
-
-        return super.getValue();
+        C c = newEmptyCollection();
+        c.addAll(collection);
+        return c;
     }
 
     @Override
     public int size() {
-        return getValue().size();
+        return collection.size();
     }
 
     @Override
     public boolean isEmpty() {
-        return getValue().isEmpty();
+        return collection.isEmpty();
     }
 
     @Override
     public boolean contains(@Nullable Object o) {
-        return getValue().contains(o);
+        return collection.contains(o);
     }
 
     @NonNull
     @Override
-    public Iterator<T> iterator() {
-        return getValue().iterator();
+    public Iterator<E> iterator() {
+        return collection.iterator();
     }
 
     @NonNull
     @Override
     public Object[] toArray() {
-        return getValue().toArray();
+        return collection.toArray();
     }
 
+    @SuppressWarnings("SuspiciousToArrayCall")
     @NonNull
     @Override
-    public <T1> T1[] toArray(@NonNull T1[] a) {
-        return getValue().toArray(a);
+    public <T> T[] toArray(@NonNull T[] a) {
+        return collection.toArray(a);
     }
 
     @Override
-    public boolean add(T t) {
-        boolean result = getValue().add(t);
+    public boolean containsAll(@NonNull Collection<?> c) {
+        return collection.containsAll(c);
+    }
+
+    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
+    @Override
+    public boolean equals(@Nullable Object o) {
+        return collection.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return collection.hashCode();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @NonNull
+    @Override
+    public Spliterator<E> spliterator() {
+        return collection.spliterator();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @NonNull
+    @Override
+    public Stream<E> stream() {
+        return collection.stream();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @NonNull
+    @Override
+    public Stream<E> parallelStream() {
+        return collection.parallelStream();
+    }
+
+    @Override
+    public boolean add(E e) {
+        boolean result = collection.add(e);
         notifyDataChanged();
 
         return result;
@@ -74,20 +115,15 @@ public abstract class LiveCollection<T, C extends Collection<T>> extends LiveDat
 
     @Override
     public boolean remove(@Nullable Object o) {
-        boolean result = getValue().remove(o);
+        boolean result = collection.remove(o);
         notifyDataChanged();
 
         return result;
     }
 
     @Override
-    public boolean containsAll(@NonNull Collection<?> c) {
-        return getValue().containsAll(c);
-    }
-
-    @Override
-    public boolean addAll(@NonNull Collection<? extends T> c) {
-        boolean result = getValue().addAll(c);
+    public boolean addAll(@NonNull Collection<? extends E> c) {
+        boolean result = collection.addAll(c);
         notifyDataChanged();
 
         return result;
@@ -95,16 +131,7 @@ public abstract class LiveCollection<T, C extends Collection<T>> extends LiveDat
 
     @Override
     public boolean removeAll(@NonNull Collection<?> c) {
-        boolean result = getValue().removeAll(c);
-        notifyDataChanged();
-
-        return result;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    @Override
-    public boolean removeIf(@NonNull Predicate<? super T> filter) {
-        boolean result = getValue().removeIf(filter);
+        boolean result = collection.removeAll(c);
         notifyDataChanged();
 
         return result;
@@ -112,7 +139,7 @@ public abstract class LiveCollection<T, C extends Collection<T>> extends LiveDat
 
     @Override
     public boolean retainAll(@NonNull Collection<?> c) {
-        boolean result = getValue().retainAll(c);
+        boolean result = collection.retainAll(c);
         notifyDataChanged();
 
         return result;
@@ -120,29 +147,21 @@ public abstract class LiveCollection<T, C extends Collection<T>> extends LiveDat
 
     @Override
     public void clear() {
-        getValue().clear();
+        collection.clear();
         notifyDataChanged();
     }
 
-    public void disableNotifyingDataChanged() {
-        isNotifyingEnabled = false;
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    public boolean removeIf(@NonNull Predicate<? super E> filter) {
+        boolean result = collection.removeIf(filter);
+        notifyDataChanged();
+
+        return result;
     }
 
-    public void enableNotifyingDataChanged(boolean notify) {
-        isNotifyingEnabled = true;
-        if (notify) notifyDataChanged();
-    }
-
-    void notifyDataChanged() {
-        C c = newEmptyCollection();
-        c.addAll(getValue());
-        notifyDataChanged(c);
-    }
-
-    private void notifyDataChanged(C collection) {
-        if (!isNotifyingEnabled) return;
-
-        if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
+    protected void notifyDataChanged() {
+        if (Thread.currentThread().equals(Looper.getMainLooper().getThread())) {
             setValue(collection);
         } else {
             postValue(collection);

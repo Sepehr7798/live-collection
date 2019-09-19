@@ -4,14 +4,16 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-public class LiveSet<T> extends LiveCollection<T, Set<T>> implements Set<T> {
+@SuppressWarnings("unused")
+public class LiveSet<E> extends LiveCollection<E, Set<E>> implements Set<E> {
 
     @Override
-    protected Set<T> newEmptyCollection() {
+    protected Set<E> newEmptyCollection() {
         return new HashSet<>();
     }
 
-    public LiveSet(T... defaultItems) {
-        super(new HashSet<>(Arrays.asList(defaultItems)));
+    @SafeVarargs
+    public LiveSet(E... items) {
+        super(new HashSet<>(Arrays.asList(items)));
     }
 }
