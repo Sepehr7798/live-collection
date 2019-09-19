@@ -14,6 +14,8 @@ import java.util.function.Predicate;
 
 public abstract class LiveCollection<T, C extends Collection<T>> extends LiveData<C> implements Collection<T> {
 
+    protected abstract C newEmptyCollection();
+
     private boolean isNotifyingEnabled = true;
 
     LiveCollection(@NonNull C defaultItems) {
@@ -132,7 +134,9 @@ public abstract class LiveCollection<T, C extends Collection<T>> extends LiveDat
     }
 
     void notifyDataChanged() {
-        notifyDataChanged(getValue());
+        C c = newEmptyCollection();
+        c.addAll(getValue());
+        notifyDataChanged(c);
     }
 
     private void notifyDataChanged(C collection) {

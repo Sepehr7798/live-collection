@@ -16,6 +16,11 @@ import java.util.function.UnaryOperator;
 
 public class LiveList<T> extends LiveCollection<T, List<T>> implements List<T> {
 
+    @Override
+    protected List<T> newEmptyCollection() {
+        return new ArrayList<>();
+    }
+
     @SafeVarargs
     public LiveList(T... defaultItems) {
         super(new ArrayList<>(Arrays.asList(defaultItems)));
