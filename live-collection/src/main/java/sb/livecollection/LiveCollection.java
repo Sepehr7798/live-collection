@@ -162,9 +162,9 @@ public abstract class LiveCollection<E, C extends Collection<E>>
 
     protected void notifyDataChanged() {
         if (Thread.currentThread().equals(Looper.getMainLooper().getThread())) {
-            setValue(collection);
+            setValue(getValue());
         } else {
-            postValue(collection);
+            postValue(getValue());
         }
     }
 }
